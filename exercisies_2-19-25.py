@@ -1,3 +1,5 @@
+import turtle
+
 #exercise 15.1
 class Point:
     def __init__(self,x,y):
@@ -40,5 +42,26 @@ def rect_in_circle(circle, rectangle):
     corner_4 = Point(rectangle.corner.x + rectangle.width, rectangle.corner.y + rectangle.height)
     return point_in_circle(circle,corner_1) and point_in_circle(circle, corner_2) and point_in_circle(circle,corner_3) and point_in_circle(circle,corner_4)
 
-rec = Rectangle(150,100,50,50)
-print(rect_in_circle(circle, rec))
+def rect_circle_overlap(circle, rectangle):
+    corner_1 = rectangle.corner
+    corner_2 = Point(rectangle.corner.x + rectangle.width, rectangle.corner.y)
+    corner_3 = Point(rectangle.corner.x, rectangle.corner.y + rectangle.height)
+    corner_4 = Point(rectangle.corner.x + rectangle.width, rectangle.corner.y + rectangle.height)
+    return point_in_circle(circle,corner_1) or point_in_circle(circle, corner_2) or point_in_circle(circle,corner_3) or point_in_circle(circle,corner_4)
+
+
+#exercise 15.2
+#Write a function called draw_rect that takes a Turtle object and a Rectangle and
+#uses the Turtle to draw the Rectangle. 
+def draw_rect(turtle, rectangle):
+    turtle.setposition(rectangle.corner.x,rectangle.corner.y)
+    for i in range(2):    
+        turtle.forward(rectangle.width)
+        turtle.left(90)
+        turtle.forward(rectangle.height)
+        turtle.left(90)
+
+rec = Rectangle(0,0,500,100)  
+squirt  = turtle.Turtle()
+
+draw_rect(squirt,rec)
