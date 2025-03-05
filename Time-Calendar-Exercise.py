@@ -8,6 +8,7 @@ Create a system of classes to represent time, dates, and appointments in a calen
 """
 
 #Part 1: Time Class
+
 #First, create a Time class similar to the example in previous chapters:
 
 #1. Create a Time class with attributes for hours, minutes, and seconds
@@ -53,6 +54,16 @@ class Time:
         minutes, second = divmod(total_seconds, 60)
         hour, minute = divmod(minutes, 60)
         return Time(hour, minute, second)
+    
+    def __eq__(self, other):
+        if (
+            self.hours == other.hours 
+            and self.minutes == other.minutes 
+            and self.seconds == other.seconds
+        ):
+            return True
+        else:
+            return False
 
 #Part 2: Date Class
 
@@ -99,6 +110,61 @@ class Date:
         date = datetime.datetime(self.year, self.month, self.day)
         day_of_week = date.strftime('%A')
         return day_of_week
+    
+    def __eq__(self, other):
+        if (
+            self.year == other.year  
+            and self.month == other.month  
+            and self.day == other.day  
+        ):
+            return True
+        else:
+            return False
+
+#Part 3: Appointment Class
+
+#Create an Appointment class that inherits from both Date and Time:
+
+#Create a new class DateTime that combines date and time information
+
+class DateTime:
+    def __init__(self,year, month, day, hours, minutes, seconds):
+        self.date = Date(year, month, day)
+        self.time = Time(hours, minutes, seconds)
+
+#Create an Appointment class that inherits from DateTime and adds:
+#A title attribute
+#A duration attribute (in minutes)
+#A location attribute
+#A description attribute 
+                
+class Appointment(DateTime):
+    def __init__(self,year, month, day, hours, minutes, seconds, title, duration, location, description):
+        super().__init__(year, month, day, hours, minutes, seconds)
+        """duration should be formatted 00:00:00, or hours:minutes:seconds as a string"""
+        self.date = Date(year, month, day)
+        self.time = Time(hours, minutes, seconds)
+        self.title = title
+        self.duration = duration
+        self.location = location
+        self.description = description
+    
+    def conflicts_with(self, other):
+        hours, minutes, seconds = map(int, self.duration.split(':'))
+        duration = Time(hours, minutes, seconds)
+        return self.date == other.date and other.time < self.time.add_time(duration)
+    
+    def __str__(self):
+        return(f"{self.title}:\n{self.date.get_day()}, {self.date}, {self.time},\nDuration: {self.duration},\nLocation: {self.location},\nDescription: {self.description}")
+
+
+
+
+
+
+
+
+
 
 
 time = Time(18, 3,43)
@@ -108,5 +174,9 @@ print (time_2 < time)
 
 date = Date(1300,1,31)
 date_2 = Date(2025,3,4)
+date_3 = Date(1300,1,31)
 
-print(date_2.get_day())
+date_time = Appointment(2025,3,4,18, 3,43, "Meeting 1", "0:0:20","outside", "1 on 1")
+date_time2 =  Appointment(2025,3,4,18, 23,43, "meeting 1", "0:0:20","outside", "1 on 1")
+
+print(date_time)
