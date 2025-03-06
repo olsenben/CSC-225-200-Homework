@@ -155,7 +155,36 @@ class Appointment(DateTime):
         return self.date == other.date and other.time < self.time.add_time(duration)
     
     def __str__(self):
-        return(f"{self.title}:\n{self.date.get_day()}, {self.date}, {self.time},\nDuration: {self.duration},\nLocation: {self.location},\nDescription: {self.description}")
+        return(f"{self.title},\n{self.date.get_day()}, {self.date}, {self.time},\nDuration: {self.duration},\nLocation: {self.location},\nDescription: {self.description}")
+    
+#Part 4: Calendar Class
+#Create a Calendar class to manage a collection of appointments:
+
+#1. Initialize with a name and an empty list of appointments
+
+class Calendar:
+    def __init__(self,name):
+        self.name = name
+        self.appointments = []
+
+    #2. Add methods to add and remove appointments
+    def add_appointment(self, appointment):
+        self.appointments.append(appointment)
+    
+    def remove_appointment(self, appointment):
+        self.appointments.remove(appointment)
+    
+    #3. Create a method to find all appointments on a given date
+    def find_appointments_on(self, date):
+        return [appt for appt in self.appointments if appt.date == date]
+    
+    #4. Implement a method to find conflicts among all appointments
+    def find_conflicts(self):
+        return [f"Conflict between {appt.title} and {other_appt.title}" for appt in self.appointments for other_appt in self.appointments if appt.conflicts_with(other_appt) ]
+
+
+
+
 
 
 
