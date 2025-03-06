@@ -1,4 +1,5 @@
 import datetime
+from collections import defaultdict
 
 """
 Time and Calendar Exercise
@@ -111,6 +112,11 @@ class Date:
         day_of_week = date.strftime('%A')
         return day_of_week
     
+    def get_week_start(self):
+        date = datetime.datetime(self.year, self.month, self.day)
+        monday = date - datetime.timedelta(days=date.weekday())
+        return Date(monday.year, monday.month, monday.day)
+    
     def __eq__(self, other):
         if (
             self.year == other.year  
@@ -152,7 +158,7 @@ class Appointment(DateTime):
     def conflicts_with(self, other):
         hours, minutes, seconds = map(int, self.duration.split(':'))
         duration = Time(hours, minutes, seconds)
-        return self.date == other.date and other.time < self.time.add_time(duration)
+        return self.date == other.date and self.time < other.time < self.time.add_time(duration)
     
     def __str__(self):
         return(f"{self.title},\n{self.date.get_day()}, {self.date}, {self.time},\nDuration: {self.duration},\nLocation: {self.location},\nDescription: {self.description}")
@@ -180,7 +186,200 @@ class Calendar:
     
     #4. Implement a method to find conflicts among all appointments
     def find_conflicts(self):
-        return [f"Conflict between {appt.title} and {other_appt.title}" for appt in self.appointments for other_appt in self.appointments if appt.conflicts_with(other_appt) ]
+        conflicts = []
+        for i, appt in enumerate(self.appointments):
+            for other_appt in self.appointments[i+1:]:
+                if appt.conflicts_with(other_appt):
+                    conflicts.append(f"Conflict between {appt.title} and {other_appt.title}")
+        return conflicts
+    
+    #5 Add a method to print a formatted daily or weekly view of appointments
+    def show_appointments(self, grouped:str ="weekly"):
+        """
+        print a formatted daily or weekly view of appointments
+        
+        Input:
+            grouped (str): grouped by "weekly" or "daily"
+
+        Output: 
+            str: formatted list of dialy or weekly appointments
+        """
+        if grouped == "daily": 
+            appointments_by_date = defaultdict(list)
+            
+            for appt in self.appointments:
+                appointments_by_date[str(appt.date)].append(appt)
+            
+            for date, appts in sorted(appointments_by_date.items()):
+                print (f"\nAppointments for {date} ({appts[0].date.get_day()})")
+                for appt in sorted(appts, key=lambda x: x.time):
+                    print(f"\n{appt}")
+        
+        elif grouped == "weekly":
+            appointments_by_week = defaultdict(list)
+            for appt in self.appointments:
+                week_start = appt.date.get_week_start()
+                appointments_by_week[str(week_start)].append(appt)
+            
+            for week_start, appts in sorted(appointments_by_week.items()):
+                print (f"\nAppointments for week {week_start}:")
+                for appt in sorted(appts, key=lambda x: datetime.datetime(x.year, x.month, x.day)):
+                    print(f"\n{appt}")
+
+        else:
+            print("Invalid group. Use 'daily' or 'weekly'")
+
+#Part 5: Specialized Calendar Types
+
+#Create at least two specialized calendar types that inherit from Calendar:
+
+#1 WorkCalendar - with methods specific to work appointments
+class WorkCalendar(Calendar):
+    def __init__(self, name, work_start='09:00:00', work_end="17:00:00"):
+        super().__init__(name)
+        self.name = name
+        self.work_start = self._convert_time(work_start)
+        self.work_end = self._convert_time(work_end)
+        self.appointments = []
+    
+    def _convert_time(self, time_str):
+        hours, minutes, seconds = map(int, time_str.split(':'))
+        return Time(hours, minutes, seconds)
+
+    def add_appointment(self, appointment):
+        return super().add_appointment(appointment)
+
+    
+    def remove_appointment(self, appointment):
+        return super().remove_appointment(appointment)    
+    
+    def find_appointments_on(self, date):
+        return super().find_appointments_on(date)    
+    
+    def find_conflicts(self):
+        return super().find_conflicts()    
+
+    def show_appointments(self, grouped:str ="weekly"):
+        """
+        print a formatted daily or weekly view of appointments
+        
+        Input:
+            grouped (str): grouped by "weekly" or "daily"
+
+        Output: 
+            str: formatted list of dialy or weekly appointments
+        """
+        if grouped == "daily": 
+            appointments_by_date = defaultdict(list)
+            
+            for appt in self.appointments:
+                appointments_by_date[str(appt.date)].append(appt)
+            
+            for date, appts in sorted(appointments_by_date.items()):
+                print (f"\nWork Appointments for {date} ({appts[0].date.get_day()})")
+                for appt in sorted(appts, key=lambda x: x.time):
+                    print(f"\n{appt}")
+        
+        elif grouped == "weekly":
+            appointments_by_week = defaultdict(list)
+            for appt in self.appointments:
+                week_start = appt.date.get_week_start()
+                appointments_by_week[str(week_start)].append(appt)
+            
+            for week_start, appts in sorted(appointments_by_week.items()):
+                print (f"\nWork Appointments for week {week_start}:")
+                for appt in sorted(appts, key=lambda x: datetime.datetime(x.year, x.month, x.day)):
+                    print(f"\n{appt}")
+
+        else:
+            print("Invalid group. Use 'daily' or 'weekly'")
+
+#SchoolCalendar - with methods specific to academic appointments
+class SchoolCalendar(Calendar):
+    def __init__(self, name):
+        super().__init__(name)
+        self.name = name
+        self.class_schedule = {}  # Dictionary to store fixed class schedules (e.g., {"Monday": [Time(10, 0, 0), Time(14, 0, 0)]})
+
+    def add_class(self, title, start_date, time, duration, location, description, months=5):
+        date = start_date
+        for _ in range(months):
+            self.add_appointment(Appointment(date.year, date.month, date.day, time.hours, time.minutes, time.seconds, title, duration, location, description))
+            date = datetime.datetime(date.year, date.month, date.day) + datetime.timedelta(weeks=1)
+            date = Date(date.year, date.month, date.day)
+    
+    def show_classes(self, grouped:str ="weekly"):
+        """
+        print a formatted daily or weekly view of appointments
+        
+        Input:
+            grouped (str): grouped by "weekly" or "daily"
+
+        Output: 
+            str: formatted list of dialy or weekly appointments
+        """
+        if grouped == "daily": 
+            appointments_by_date = defaultdict(list)
+            
+            for appt in self.appointments:
+                appointments_by_date[str(appt.date)].append(appt)
+            
+            for date, appts in sorted(appointments_by_date.items()):
+                print (f"\nClasses for {date} ({appts[0].date.get_day()})")
+                for appt in sorted(appts, key=lambda x: x.time):
+                    print(f"\n{appt}")
+        
+        elif grouped == "weekly":
+            appointments_by_week = defaultdict(list)
+            for appt in self.appointments:
+                week_start = appt.date.get_week_start()
+                appointments_by_week[str(week_start)].append(appt)
+            
+            for week_start, appts in sorted(appointments_by_week.items()):
+                print (f"\nClasses for week {week_start}:")
+                for appt in sorted(appts, key=lambda x: datetime.datetime(x.year, x.month, x.day)):
+                    print(f"\n{appt}")
+
+        else:
+            print("Invalid group. Use 'daily' or 'weekly'")
+
+if __name__ == "__main__":
+    cal = WorkCalendar("Work Calendar")
+    
+    # Creating appointments
+    appt1 = Appointment(2025, 5, 1, 9, 0, 0, "Team meeting", "1:00:00", "conference room","team check in")
+    appt2 = Appointment(2025, 5, 1, 10, 30, 0, "Client call", "00:20:00","office",  "bob vances refridgeration")
+    appt3 = Appointment(2025, 5, 1, 12, 0, 0, "Lunch","00:30:00","break room",  "cold macaroni" )
+    appt4 = Appointment(2025, 5, 1, 9, 30, 0, "Project Review", "00:30:00","conference room",  "project updates")  # Conflict!
+    
+    # Adding appointments
+    cal.add_appointment(appt1)
+    cal.add_appointment(appt2)
+    cal.add_appointment(appt3)
+    cal.add_appointment(appt4)
+    
+    # Show all appointments
+    cal.show_appointments("daily")
+    
+    # Find conflicts
+    conflicts = cal.find_conflicts()
+    if conflicts:
+        print("\nConflicts found:")
+        for conflict in conflicts:
+            print(conflict)
+    else:
+        print("No conflicts detected.")
+
+
+
+
+
+        
+        
+            
+
+
+
 
 
 
